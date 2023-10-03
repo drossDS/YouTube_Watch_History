@@ -36,8 +36,6 @@ Order BY Count(Vid_Title) DESC
 
 --FIND MOST WATCHED CHANNELS
 Select Channel, COUNT(Channel) as ChVidCount, Ch_URL as ChannelURL
-	/*You need to pick MAX for the URL because even though all channel entires have the same URL, 
-	SQL doesn't know which one to pick*/
 From YouTubeWatchHistory
 GROUP BY Channel, Ch_URL
 ORDER BY COUNT(Channel) DESC
