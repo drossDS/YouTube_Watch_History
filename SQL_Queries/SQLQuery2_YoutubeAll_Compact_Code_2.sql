@@ -23,23 +23,23 @@ WITH (
 --1.1 - EXAMINE DATA BRIEFLY BEFORE CLEANING
 
 --FIND THE MOST WATCHED VIDEOS
-select Vid_Title, Count(Vid_Title), MAX(Vid_URL)
+select Vid_Title, Count(Vid_Title), Vid_URL
 from YouTubeWatchHistory
-Group BY Vid_Title
+Group BY Vid_Title, Vid_URL
 Order BY Count(Vid_Title) DESC
 
 --FIND THE MOST WATCHED VIDEOS AND EXTRACT THE VIDEO IDs
-select Vid_Title, Count(Vid_Title), MAX(Vid_URL), max(right(Vid_URL, (len(Vid_URL) - CHARINDEX('=', Vid_URL)))) AS Vid_Id
+select Vid_Title, Count(Vid_Title) AS Vid_Count, Vid_URL, right(Vid_URL, (len(Vid_URL) - CHARINDEX('=', Vid_URL))) AS Vid_Id
 from YouTubeWatchHistory
-Group BY Vid_Title
+Group BY Vid_Title, Vid_URL, right(Vid_URL, (len(Vid_URL) - CHARINDEX('=', Vid_URL)))
 Order BY Count(Vid_Title) DESC
 
 --FIND MOST WATCHED CHANNELS
-Select Channel, COUNT(Channel) as ChVidCount, MAX(Ch_URL) as ChannelURL
+Select Channel, COUNT(Channel) as ChVidCount, Ch_URL as ChannelURL
 	/*You need to pick MAX for the URL because even though all channel entires have the same URL, 
 	SQL doesn't know which one to pick*/
 From YouTubeWatchHistory
-GROUP BY Channel
+GROUP BY Channel, Ch_URL
 ORDER BY COUNT(Channel) DESC
 
 --1.2 SELECT AND INVESTIGATE ALL VIDEOS WITH NULL CHANNELS, BUT NOT NULL VIDEO TITLES
@@ -60,6 +60,10 @@ where Channel IS NULL AND Vid_Title NOT LIKE 'Watched a video that has been remo
 	watch history */
 
 --1.2.1 ADD THE DETAILS DATA TO THE CURRENT TABLE
+
+	/* NOTE:  For practice, a new table was made with just the video ID and the corresponding details.  This table is then left joined
+	to the original table to add the details column.  Normally, one would go back and add the details column when the table was originally
+	created, but in this case, it was an opportunity to peform a join and add a column to a table.*/
 
 --MAKE A TABLE WITH THE DETAILS DATA IMPORTED FROM THE JSON FILE
 DECLARE @JSON_D varchar(max)
@@ -105,15 +109,15 @@ Select * From YTWH
 --3 - PERFORM BASIC EXPLORATORY ANALYSIS ON CLEANED DATA
 
 --DETERMINE THE MOST WATCHED VIDEOS, SORT BY COUNT
-select Vid_Title, Max(Channel), Count(Vid_Title), MAX(Vid_URL)
+select Vid_Title, Channel, Count(Vid_Title), Vid_URL
 from YTWH
-Group BY Vid_Title
+Group BY Vid_Title, Channel, Vid_URL
 Order BY Count(Vid_Title) DESC
 
 --DETERMINE THE MOST WATCHED CHANNELS, SORT BY (VIEW) COUNT
-SELECT Channel, COUNT(Channel) as Ch_Count, max(Ch_URL) as Ch_URL
+SELECT Channel, COUNT(Channel) as Ch_Count, Ch_URL
 from YTWH
-Group By Channel
+Group By Channel, Ch_URL
 Order by Count (Channel) DESC
 
 --DETERMINE THE CHANNELS WITH THE MOST INDIVIDUAL VIDEOS VIEWED
@@ -156,12 +160,3 @@ DROP COLUMN Vid_Title, Channel
 
 -- VIEW CLEAN_FINAL_TABLE TO VERIFY
 SELECT * FROM Clean_Final_Table
-
---********************* TO DO NEXT **************************************
-
-/* we need three tables:
-1.  Has all the information from the watch history cleaned, formated, with basic features (day of week and time)
-2.  Has just the channels with the number of videos watched from each channel and the URL
-3.  Has just the videos, with the number of times each video was watched and the URL
-
-
